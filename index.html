@@ -149,21 +149,21 @@
         const OAUTH_CONFIG = {
             google: {
                 clientId: 'your-google-client-id-here', // Replace with actual Google Client ID
-                redirectUri: `${window.location.origin}`,
+                redirectUri: window.location.origin,
                 scope: 'openid email profile',
                 authUrl: 'https://accounts.google.com/oauth/v2/auth'
             },
             github: {
                 clientId: 'your-github-client-id-here', // Replace with actual GitHub Client ID
-                redirectUri: `${window.location.origin}`,
+                redirectUri: window.location.origin,
                 scope: 'user:email',
                 authUrl: 'https://github.com/login/oauth/authorize'
             },
             facebook: {
-                clientId: '1434912034526796', // Replace with actual Facebook App ID
-                redirectUri: `${window.location.origin}`,
+                clientId: '1434912034526796',
+                redirectUri: 'https://ems-dash-6120g2qv9-kurt-estacions-projects-e70aecc4.vercel.app/', // Note the trailing slash
                 scope: 'email',
-                authUrl: 'https://www.facebook.com/v18.0/dialog/oauth'
+                authUrl: 'https://www.facebook.com/v21.0/dialog/oauth'
             }
         };
 
