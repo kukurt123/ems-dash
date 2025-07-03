@@ -149,19 +149,19 @@
         const OAUTH_CONFIG = {
             google: {
                 clientId: 'your-google-client-id-here', // Replace with actual Google Client ID
-                redirectUri: `http://localhost:3000`,
+                redirectUri: `${window.location.origin}`,
                 scope: 'openid email profile',
                 authUrl: 'https://accounts.google.com/oauth/v2/auth'
             },
             github: {
                 clientId: 'your-github-client-id-here', // Replace with actual GitHub Client ID
-                redirectUri: `http://localhost:3000`,
+                redirectUri: `${window.location.origin}`,
                 scope: 'user:email',
                 authUrl: 'https://github.com/login/oauth/authorize'
             },
             facebook: {
                 clientId: '1434912034526796', // Replace with actual Facebook App ID
-                redirectUri: `http://localhost:3000`,
+                redirectUri: `${window.location.origin}`,
                 scope: 'email',
                 authUrl: 'https://www.facebook.com/v18.0/dialog/oauth'
             }
