@@ -143,25 +143,26 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:3001/api/v1';
-
-        // OAuth2 Configuration - REPLACE WITH YOUR ACTUAL CLIENT IDs
+        // Configuration - Your backend base URL
+        const API_BASE = 'http://ai2aim-dev.duckdns.org:3001';
+        
+        // OAuth2 Configuration - Replace with your actual values
         const OAUTH_CONFIG = {
             google: {
-                clientId: 'your-google-client-id-here', // Replace with actual Google Client ID
+                clientId: 'your-google-client-id-here',
                 redirectUri: window.location.origin,
                 scope: 'openid email profile',
                 authUrl: 'https://accounts.google.com/oauth/v2/auth'
             },
             github: {
-                clientId: 'your-github-client-id-here', // Replace with actual GitHub Client ID
+                clientId: 'your-github-client-id-here',
                 redirectUri: window.location.origin,
                 scope: 'user:email',
                 authUrl: 'https://github.com/login/oauth/authorize'
             },
             facebook: {
                 clientId: '1434912034526796',
-                redirectUri: 'https://ems-dash-6120g2qv9-kurt-estacions-projects-e70aecc4.vercel.app/', // Note the trailing slash
+                redirectUri: window.location.origin,
                 scope: 'email',
                 authUrl: 'https://www.facebook.com/v21.0/dialog/oauth'
             }
@@ -176,6 +177,57 @@
             checkExistingLogin();
         });
 
+        // Enhanced fetch with CORS handling and retry logic
+        async function corsResistantFetch(url, options = {}, retries = 3) {
+            const defaultOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    ...options.headers
+                },
+                mode: 'cors',
+                credentials: 'omit',
+                ...options
+            };
+
+            for (let attempt = 1; attempt <= retries; attempt++) {
+                try {
+                    console.log(`Attempt ${attempt}/${retries}: ${defaultOptions.method} ${url}`);
+                    
+                    const response = await fetch(url, defaultOptions);
+                    
+                    // Handle different response statuses
+                    if (response.ok) {
+                        return response;
+                    } else if (response.status >= 400 && response.status < 500) {
+                        // Client errors - don't retry
+                        return response;
+                    } else {
+                        // Server errors - retry
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error(`Fetch attempt ${attempt}/${retries} failed:`, error);
+                    
+                    if (attempt === retries) {
+                        // Handle specific CORS errors
+                        if (error.message.includes('CORS') || 
+                            error.message.includes('NetworkError') ||
+                            error.message.includes('Failed to fetch')) {
+                            
+                            showStatus('❌ Connection blocked. Please ensure the backend allows requests from this domain.', 'error');
+                            throw new Error('CORS or network error - check backend CORS configuration');
+                        }
+                        throw error;
+                    }
+                    
+                    // Wait before retry (exponential backoff)
+                    await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                }
+            }
+        }
+
         // Handle OAuth callback when user returns from provider
         function handleOAuthCallback() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -183,7 +235,7 @@
             const state = urlParams.get('state');
 
             if (code && state) {
-                const provider = state.split('_')[0]; // Extract provider from state
+                const provider = state.split('_')[0];
                 showStatus(`Processing ${provider} authorization...`, 'info');
                 exchangeCodeForTokens(provider, code);
             }
@@ -201,7 +253,7 @@
             }
         }
 
-        // Manual Login
+        // Manual Login - HERE'S YOUR DIRECT BACKEND CALL
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -210,15 +262,16 @@
 
             try {
                 showStatus('Logging in...', 'info');
-                const response = await fetch(`${API_BASE}/auth/login`, {
+                
+                // Direct backend call with CORS handling
+                const response = await corsResistantFetch(`${API_BASE}/api/v1/auth/login`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
 
                 const data = await response.json();
 
-                if (response.ok) {
+                if (response.ok && data.success !== false) {
                     currentUser = data.data.user;
                     currentTokens = data.data.tokens;
 
@@ -230,15 +283,21 @@
                     showStatus('✅ Login successful!', 'success');
                     updateUserDisplay();
                 } else {
-                    showStatus(`❌ Login failed: ${data.message}`, 'error');
+                    showStatus(`❌ Login failed: ${data.message || 'Invalid credentials'}`, 'error');
                 }
             } catch (error) {
+                console.error('Login error:', error);
                 showStatus(`💥 Login error: ${error.message}`, 'error');
             }
         });
 
-        // Social Login Functions - Frontend builds OAuth URLs and redirects
+        // Social Login Functions
         function loginWithGoogle() {
+            if (!OAUTH_CONFIG.google.clientId || OAUTH_CONFIG.google.clientId === 'your-google-client-id-here') {
+                showStatus('Google OAuth not configured. Please add your Google Client ID.', 'error');
+                return;
+            }
+
             const state = `google_${generateRandomString()}`;
             const params = new URLSearchParams({
                 client_id: OAUTH_CONFIG.google.clientId,
@@ -252,12 +311,15 @@
 
             const authUrl = `${OAUTH_CONFIG.google.authUrl}?${params.toString()}`;
             showStatus('Redirecting to Google...', 'info');
-
-            // This triggers the OAuth popup/redirect
             window.location.href = authUrl;
         }
 
         function loginWithGitHub() {
+            if (!OAUTH_CONFIG.github.clientId || OAUTH_CONFIG.github.clientId === 'your-github-client-id-here') {
+                showStatus('GitHub OAuth not configured. Please add your GitHub Client ID.', 'error');
+                return;
+            }
+
             const state = `github_${generateRandomString()}`;
             const params = new URLSearchParams({
                 client_id: OAUTH_CONFIG.github.clientId,
@@ -268,12 +330,15 @@
 
             const authUrl = `${OAUTH_CONFIG.github.authUrl}?${params.toString()}`;
             showStatus('Redirecting to GitHub...', 'info');
-
-            // This triggers the OAuth popup/redirect
             window.location.href = authUrl;
         }
 
         function loginWithFacebook() {
+            if (!OAUTH_CONFIG.facebook.clientId) {
+                showStatus('Facebook OAuth not configured.', 'error');
+                return;
+            }
+
             const state = `facebook_${generateRandomString()}`;
             const params = new URLSearchParams({
                 client_id: OAUTH_CONFIG.facebook.clientId,
@@ -285,19 +350,16 @@
 
             const authUrl = `${OAUTH_CONFIG.facebook.authUrl}?${params.toString()}`;
             showStatus('Redirecting to Facebook...', 'info');
-
-            // This triggers the OAuth popup/redirect
             window.location.href = authUrl;
         }
 
-        // Exchange authorization code for tokens (Backend handles this)
+        // Exchange authorization code for tokens - ANOTHER DIRECT BACKEND CALL
         async function exchangeCodeForTokens(provider, code) {
             try {
                 showStatus(`Exchanging ${provider} authorization code...`, 'info');
 
-                const response = await fetch(`${API_BASE}/auth/social/exchange`, {
+                const response = await corsResistantFetch(`${API_BASE}/api/v1/auth/social/exchange`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         provider: provider,
                         code: code,
@@ -307,7 +369,7 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
+                if (response.ok && data.success !== false) {
                     currentUser = data.data.user;
                     currentTokens = data.data.tokens;
 
@@ -324,22 +386,22 @@
                     // Clean up URL
                     window.history.replaceState({}, document.title, window.location.pathname);
                 } else {
-                    showStatus(`❌ ${provider} login failed: ${data.message}`, 'error');
+                    showStatus(`❌ ${provider} login failed: ${data.message || 'Authentication failed'}`, 'error');
                 }
             } catch (error) {
+                console.error(`${provider} login error:`, error);
                 showStatus(`💥 ${provider} login error: ${error.message}`, 'error');
             }
         }
 
-        // Logout
+        // Logout - DIRECT BACKEND CALL
         async function logout() {
             const refreshToken = localStorage.getItem('refreshToken');
 
             if (refreshToken) {
                 try {
-                    await fetch(`${API_BASE}/auth/logout`, {
+                    await corsResistantFetch(`${API_BASE}/api/v1/auth/logout`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ refreshToken: refreshToken })
                     });
                 } catch (error) {
@@ -362,10 +424,9 @@
             showStatus('👋 Logged out successfully', 'success');
         }
 
-        // Navigate to dashboard (placeholder)
+        // Navigate to dashboard
         function goToDashboard() {
             showStatus('Redirecting to dashboard...', 'info');
-            // Replace with your actual dashboard URL
             setTimeout(() => {
                 alert('Dashboard integration coming soon! You are successfully logged in.');
             }, 500);
