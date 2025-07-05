@@ -177,7 +177,7 @@
             checkExistingLogin();
         });
 
-        // Enhanced fetch with CORS handling and retry logic
+        // Just update your existing corsResistantFetch function
         async function corsResistantFetch(url, options = {}, retries = 3) {
             const defaultOptions = {
                 method: 'GET',
@@ -187,7 +187,7 @@
                     ...options.headers
                 },
                 mode: 'cors',
-                credentials: 'omit',
+                credentials: 'include', // Changed from 'omit' to 'include'
                 ...options
             };
 
@@ -197,32 +197,27 @@
                     
                     const response = await fetch(url, defaultOptions);
                     
-                    // Handle different response statuses
                     if (response.ok) {
                         return response;
                     } else if (response.status >= 400 && response.status < 500) {
-                        // Client errors - don't retry
                         return response;
                     } else {
-                        // Server errors - retry
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                 } catch (error) {
                     console.error(`Fetch attempt ${attempt}/${retries} failed:`, error);
                     
                     if (attempt === retries) {
-                        // Handle specific CORS errors
                         if (error.message.includes('CORS') || 
                             error.message.includes('NetworkError') ||
                             error.message.includes('Failed to fetch')) {
                             
-                            showStatus('❌ Connection blocked. Please ensure the backend allows requests from this domain.', 'error');
-                            throw new Error('CORS or network error - check backend CORS configuration');
+                            showStatus('❌ Connection issue. Check if backend is running and accessible.', 'error');
+                            throw new Error('CORS or network error');
                         }
                         throw error;
                     }
                     
-                    // Wait before retry (exponential backoff)
                     await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                 }
             }
