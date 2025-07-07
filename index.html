@@ -42,7 +42,7 @@
     <div class="max-w-md mx-auto pt-20">
         <div class="bg-white rounded-lg shadow-lg p-8">
             <h1 class="text-2xl font-bold text-center mb-8">Welcome Back</h1>
-            <p class="text-xs text-gray-500 text-center mb-8">v1.0.5</p>
+            <p class="text-xs text-gray-500 text-center mb-8">v1.0.7</p>
             <!-- Status Messages -->
             <div id="statusContainer" class="mb-6 hidden">
                 <div id="statusMessage" class="p-4 rounded-lg border fade-in">
@@ -72,12 +72,12 @@
                 <form id="loginForm" class="space-y-4 mb-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" id="loginEmail" value="admin@example.com" required
+                        <input type="email" id="loginEmail" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input type="password" id="loginPassword" value="admin123" required
+                        <input type="password" id="loginPassword" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
@@ -111,15 +111,6 @@
                         Continue with Google
                     </button>
 
-                    <button onclick="loginWithGitHub()"
-                        class="w-full flex items-center justify-center bg-gray-900 text-white rounded-lg px-4 py-3 hover:bg-gray-800 transition-colors">
-                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                        </svg>
-                        Continue with GitHub
-                    </button>
-
                     <button onclick="loginWithFacebook()"
                         class="w-full flex items-center justify-center bg-blue-600 text-white rounded-lg px-4 py-3 hover:bg-blue-700 transition-colors">
                         <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
@@ -131,36 +122,48 @@
                 </div>
 
                 <!-- Test Account Info -->
-                <div class="mt-6 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
-                    <strong>Test Accounts:</strong><br>
-                    Admin: admin@example.com / admin123<br>
-                    User: user@example.com / user123
+                <div id="testAccountInfo" class="mt-6 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
+                    <strong>Test Accounts Available</strong><br>
+                    <span class="text-gray-600">Check developer console for credentials</span>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuration - Your backend base URL
-        const API_BASE = 'https://d1ax5x0o4yxbew.cloudfront.net';
+        // Environment Configuration
+        const ENV = {
+            API_BASE: import.meta.env?.VITE_API_BASE_URL || 'http://localhost:3000',
+            GOOGLE_CLIENT_ID: import.meta.env?.VITE_GOOGLE_CLIENT_ID || '',
+            FACEBOOK_CLIENT_ID: import.meta.env?.VITE_FACEBOOK_CLIENT_ID || '',
+            TEST_ADMIN_EMAIL: import.meta.env?.VITE_TEST_ADMIN_EMAIL || '',
+            TEST_ADMIN_PASSWORD: import.meta.env?.VITE_TEST_ADMIN_PASSWORD || '',
+            TEST_USER_EMAIL: import.meta.env?.VITE_TEST_USER_EMAIL || '',
+            TEST_USER_PASSWORD: import.meta.env?.VITE_TEST_USER_PASSWORD || ''
+        };
+
+        // For non-Vite environments (like direct HTML), fallback to hardcoded values for demo
+        if (!ENV.GOOGLE_CLIENT_ID) {
+            ENV.API_BASE = 'https://d1ax5x0o4yxbew.cloudfront.net';
+            ENV.GOOGLE_CLIENT_ID = '215836913374-247t2mtfpmpl9ld0e2tbo8lke1llv4o7.apps.googleusercontent.com';
+            ENV.FACEBOOK_CLIENT_ID = '1434912034526796';
+            ENV.TEST_ADMIN_EMAIL = 'admin@example.com';
+            ENV.TEST_ADMIN_PASSWORD = 'admin123';
+            ENV.TEST_USER_EMAIL = 'user@example.com';
+            ENV.TEST_USER_PASSWORD = 'user123';
+        }
         
-        // OAuth2 Configuration - Replace with your actual values
+        // OAuth2 Configuration
         const OAUTH_CONFIG = {
             google: {
-                clientId: '215836913374-247t2mtfpmpl9ld0e2tbo8lke1llv4o7.apps.googleusercontent.com',
-                redirectUri: window.location.origin + '/', // This will be https://ems-dash.vercel.app/
+                clientId: ENV.GOOGLE_CLIENT_ID,
+                redirectUri: window.location.origin + '/',
                 scope: 'openid email profile',
-                authUrl: 'https://accounts.google.com/o/oauth2/v2/auth'  // Added /o/
-            },
-            github: {
-                clientId: 'your-github-client-id-here',
-                redirectUri: window.location.origin + '/',  // Add trailing slash
-                scope: 'user:email',
-                authUrl: 'https://github.com/login/oauth/authorize'
+                authUrl: 'https://accounts.google.com/o/oauth2/v2/auth'
             },
             facebook: {
-                clientId: '1434912034526796',
-                redirectUri: window.location.origin + '/',  // Add trailing slash to match Facebook app settings
+                clientId: ENV.FACEBOOK_CLIENT_ID,
+                redirectUri: window.location.origin + '/',
                 scope: 'email',
                 authUrl: 'https://www.facebook.com/v21.0/dialog/oauth'
             }
@@ -173,9 +176,31 @@
         window.addEventListener('load', () => {
             handleOAuthCallback();
             checkExistingLogin();
+            setupTestCredentials();
         });
 
-        // Just update your existing corsResistantFetch function
+        // Setup test credentials (for development)
+        function setupTestCredentials() {
+            if (ENV.TEST_ADMIN_EMAIL && ENV.TEST_ADMIN_PASSWORD) {
+                document.getElementById('loginEmail').value = ENV.TEST_ADMIN_EMAIL;
+                document.getElementById('loginPassword').value = ENV.TEST_ADMIN_PASSWORD;
+                
+                // Update test account info
+                document.getElementById('testAccountInfo').innerHTML = `
+                    <strong>Test Accounts:</strong><br>
+                    Admin: ${ENV.TEST_ADMIN_EMAIL} / ${ENV.TEST_ADMIN_PASSWORD}<br>
+                    User: ${ENV.TEST_USER_EMAIL} / ${ENV.TEST_USER_PASSWORD}
+                `;
+            }
+
+            // Log test credentials for developers (only in dev mode)
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('🔑 Test Credentials Available:');
+                console.log('Admin:', ENV.TEST_ADMIN_EMAIL, '/', ENV.TEST_ADMIN_PASSWORD);
+                console.log('User:', ENV.TEST_USER_EMAIL, '/', ENV.TEST_USER_PASSWORD);
+            }
+        }
+
         async function corsResistantFetch(url, options = {}, retries = 3) {
             const defaultOptions = {
                 method: 'GET',
@@ -185,7 +210,7 @@
                     ...options.headers
                 },
                 mode: 'cors',
-                credentials: 'include', // Changed from 'omit' to 'include'
+                credentials: 'include',
                 ...options
             };
 
@@ -246,7 +271,7 @@
             }
         }
 
-        // Manual Login - HERE'S YOUR DIRECT BACKEND CALL
+        // Manual Login
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -256,8 +281,7 @@
             try {
                 showStatus('Logging in...', 'info');
                 
-                // Direct backend call with CORS handling
-                const response = await corsResistantFetch(`${API_BASE}/api/v1/auth/login`, {
+                const response = await corsResistantFetch(`${ENV.API_BASE}/api/v1/auth/login`, {
                     method: 'POST',
                     body: JSON.stringify({ email, password })
                 });
@@ -268,7 +292,6 @@
                     currentUser = data.data.user;
                     currentTokens = data.data.tokens;
 
-                    // Store for persistence
                     localStorage.setItem('accessToken', currentTokens.accessToken);
                     localStorage.setItem('refreshToken', currentTokens.refreshToken);
                     localStorage.setItem('user', JSON.stringify(currentUser));
@@ -286,9 +309,8 @@
 
         // Social Login Functions
         function loginWithGoogle() {
-            if (!OAUTH_CONFIG.google.clientId || OAUTH_CONFIG.google.clientId === '215836913374-247t2mtfpmpl9ld0e2tbo8lke1lv4o7.apps.googleusercontent.com ') {
-                // showStatus('Google OAuth not configured. Please add your Google Client ID. ${OAUTH_CONFIG.google.clientId }, 'error');
-                showStatus(`Google OAuth not configured. Please add your Google Client ID. ${OAUTH_CONFIG.google.clientId}`, 'error');
+            if (!OAUTH_CONFIG.google.clientId) {
+                showStatus('Google OAuth not configured', 'error');
                 return;
             }
 
@@ -308,28 +330,9 @@
             window.location.href = authUrl;
         }
 
-        function loginWithGitHub() {
-            if (!OAUTH_CONFIG.github.clientId || OAUTH_CONFIG.github.clientId === 'your-github-client-id-here') {
-                showStatus('GitHub OAuth not configured. Please add your GitHub Client ID.', 'error');
-                return;
-            }
-
-            const state = `github_${generateRandomString()}`;
-            const params = new URLSearchParams({
-                client_id: OAUTH_CONFIG.github.clientId,
-                redirect_uri: OAUTH_CONFIG.github.redirectUri,
-                scope: OAUTH_CONFIG.github.scope,
-                state: state
-            });
-
-            const authUrl = `${OAUTH_CONFIG.github.authUrl}?${params.toString()}`;
-            showStatus('Redirecting to GitHub...', 'info');
-            window.location.href = authUrl;
-        }
-
         function loginWithFacebook() {
             if (!OAUTH_CONFIG.facebook.clientId) {
-                showStatus('Facebook OAuth not configured.', 'error');
+                showStatus('Facebook OAuth not configured', 'error');
                 return;
             }
 
@@ -347,12 +350,12 @@
             window.location.href = authUrl;
         }
 
-        // Exchange authorization code for tokens - ANOTHER DIRECT BACKEND CALL
+        // Exchange authorization code for tokens
         async function exchangeCodeForTokens(provider, code) {
             try {
                 showStatus(`Exchanging ${provider} authorization code...`, 'info');
 
-                const response = await corsResistantFetch(`${API_BASE}/api/v1/auth/social/exchange`, {
+                const response = await corsResistantFetch(`${ENV.API_BASE}/api/v1/auth/social/exchange`, {
                     method: 'POST',
                     body: JSON.stringify({
                         provider: provider,
@@ -367,7 +370,6 @@
                     currentUser = data.data.user;
                     currentTokens = data.data.tokens;
 
-                    // Store for persistence
                     localStorage.setItem('accessToken', currentTokens.accessToken);
                     localStorage.setItem('refreshToken', currentTokens.refreshToken);
                     localStorage.setItem('user', JSON.stringify(currentUser));
@@ -388,13 +390,13 @@
             }
         }
 
-        // Logout - DIRECT BACKEND CALL
+        // Logout
         async function logout() {
             const refreshToken = localStorage.getItem('refreshToken');
 
             if (refreshToken) {
                 try {
-                    await corsResistantFetch(`${API_BASE}/api/v1/auth/logout`, {
+                    await corsResistantFetch(`${ENV.API_BASE}/api/v1/auth/logout`, {
                         method: 'POST',
                         body: JSON.stringify({ refreshToken: refreshToken })
                     });
@@ -403,7 +405,6 @@
                 }
             }
 
-            // Clear local storage
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             localStorage.removeItem('user');
@@ -452,7 +453,6 @@
         function updateUserDisplay() {
             if (!currentUser) return;
 
-            // Update user avatar
             const avatarEl = document.getElementById('userAvatar');
             if (currentUser.profilePicture) {
                 avatarEl.innerHTML = `<img src="${currentUser.profilePicture}" alt="Profile" class="w-16 h-16 rounded-full mx-auto">`;
@@ -460,7 +460,6 @@
                 avatarEl.innerHTML = `<div class="w-16 h-16 bg-blue-500 rounded-full mx-auto flex items-center justify-center text-white text-2xl font-semibold">${currentUser.firstName.charAt(0)}</div>`;
             }
 
-            // Update user info
             document.getElementById('userInfo').innerHTML = `
                 <h2 class="text-xl font-semibold">${currentUser.firstName} ${currentUser.lastName}</h2>
                 <p class="text-gray-600">${currentUser.email}</p>
@@ -471,9 +470,8 @@
             `;
 
             document.getElementById('userCard').classList.remove('hidden');
-            document.getElementById('loginForms').classList.add('hidden');
+            document.getElementById('loginForms').classList.remove('hidden');
 
-            // Update navigation
             document.getElementById('navUserEmail').textContent = currentUser.email;
             document.getElementById('navUser').classList.remove('hidden');
         }

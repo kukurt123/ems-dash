@@ -15,3 +15,6 @@ build/
 coverage/
 .nyc_output/
 .vercel
+
+# Generated config file (secrets will be injected by Vercel)
+config.js
