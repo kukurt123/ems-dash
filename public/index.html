@@ -120,11 +120,11 @@
     <script>
         // Configuration from environment or window object
         const CONFIG = {
-            API_BASE: window.ENV_API_BASE || 'https://d1ax5x0o4yxbew.cloudfront.net',
-            GOOGLE_CLIENT_ID: window.ENV_GOOGLE_CLIENT_ID || '215836913374-247t2mtfpmpl9ld0e2tbo8lke1llv4o7.apps.googleusercontent.com',
-            FACEBOOK_CLIENT_ID: window.ENV_FACEBOOK_CLIENT_ID || '1434912034526796',
+            API_BASE: window.ENV_API_BASE || '',
+            GOOGLE_CLIENT_ID: window.ENV_GOOGLE_CLIENT_ID || '',
+            FACEBOOK_CLIENT_ID: window.ENV_FACEBOOK_CLIENT_ID || '',
             TEST_ADMIN_EMAIL: window.ENV_TEST_ADMIN_EMAIL || 'admin@example.com',
-            TEST_ADMIN_PASSWORD: window.ENV_TEST_ADMIN_PASSWORD || 'admin123'
+            TEST_ADMIN_PASSWORD: window.ENV_TEST_ADMIN_PASSWORD || ''
         };
 
         console.log('🔧 Configuration Status:', {
