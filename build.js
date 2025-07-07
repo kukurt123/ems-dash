@@ -1,6 +1,16 @@
 import {
-    writeFileSync
+    writeFileSync,
+    mkdirSync
 } from 'fs';
+
+// Ensure public directory exists
+try {
+    mkdirSync('public', {
+        recursive: true
+    });
+} catch (error) {
+    // Directory already exists
+}
 
 // Read environment variables
 const config = {
@@ -36,10 +46,10 @@ console.log('🔧 Configuration loaded:', {
     testMode: !!window.ENV_TEST_ADMIN_EMAIL
 });`;
 
-// Write config.js file
+// Write config.js file to public directory
 try {
-    writeFileSync('config.js', configContent);
-    console.log('✅ Configuration file generated successfully');
+    writeFileSync('public/config.js', configContent);
+    console.log('✅ Configuration file generated successfully in public/config.js');
     console.log('📋 Config summary:');
     console.log(`   API Base: ${config.API_BASE}`);
     console.log(`   Google OAuth: ${config.GOOGLE_CLIENT_ID ? '✅ Configured' : '❌ Missing'}`);
