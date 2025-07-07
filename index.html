@@ -150,19 +150,19 @@
         const OAUTH_CONFIG = {
             google: {
                 clientId: 'your-google-client-id-here',
-                redirectUri: window.location.origin,
+                redirectUri: window.location.origin + '/',  // Add trailing slash
                 scope: 'openid email profile',
                 authUrl: 'https://accounts.google.com/oauth/v2/auth'
             },
             github: {
                 clientId: 'your-github-client-id-here',
-                redirectUri: window.location.origin,
+                redirectUri: window.location.origin + '/',  // Add trailing slash
                 scope: 'user:email',
                 authUrl: 'https://github.com/login/oauth/authorize'
             },
             facebook: {
                 clientId: '1434912034526796',
-                redirectUri: window.location.origin,
+                redirectUri: window.location.origin + '/',  // Add trailing slash to match Facebook app settings
                 scope: 'email',
                 authUrl: 'https://www.facebook.com/v21.0/dialog/oauth'
             }
