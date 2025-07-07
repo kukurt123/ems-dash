@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EMS - Employee Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./config.js" onerror="console.error('Config file not loaded - using fallback')"></script>
     <style>
         .fade-in {
             animation: fadeIn 0.3s ease-in;
@@ -43,6 +44,14 @@
         <div class="bg-white rounded-lg shadow-lg p-8">
             <h1 class="text-2xl font-bold text-center mb-8">Welcome Back</h1>
             <p class="text-xs text-gray-500 text-center mb-8">v1.0.8</p>
+            
+            <!-- Configuration Status -->
+            <div id="configStatus" class="mb-6 hidden">
+                <div class="p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 text-sm">
+                    ⚠️ Application not configured. Contact administrator.
+                </div>
+            </div>
+
             <!-- Status Messages -->
             <div id="statusContainer" class="mb-6 hidden">
                 <div id="statusMessage" class="p-4 rounded-lg border fade-in">
@@ -95,109 +104,126 @@
                 </div>
 
                 <!-- Social Login Buttons -->
-                <div class="space-y-3">
-                    <button onclick="loginWithGoogle()"
-                        class="w-full flex items-center justify-center bg-white border border-gray-300 rounded-lg px-4 py-3 hover:bg-gray-50 transition-colors">
-                        <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                            <path fill="#4285F4"
-                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                            <path fill="#34A853"
-                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                            <path fill="#FBBC05"
-                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                            <path fill="#EA4335"
-                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                        </svg>
-                        Continue with Google
-                    </button>
-
-                    <button onclick="loginWithFacebook()"
-                        class="w-full flex items-center justify-center bg-blue-600 text-white rounded-lg px-4 py-3 hover:bg-blue-700 transition-colors">
-                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                        </svg>
-                        Continue with Facebook
-                    </button>
+                <div id="socialButtons" class="space-y-3">
+                    <!-- Buttons will be dynamically shown based on configuration -->
                 </div>
 
-                <!-- Test Account Info -->
-                <div id="testAccountInfo" class="mt-6 p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
-                    <strong>Test Accounts Available</strong><br>
-                    <span class="text-gray-600">Check developer console for credentials</span>
+                <!-- Development Info -->
+                <div id="devInfo" class="mt-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-600 hidden">
+                    <strong>Development Mode</strong><br>
+                    Check browser console for available test accounts
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Environment Configuration
-        const ENV = {
-            API_BASE: import.meta.env?.VITE_API_BASE_URL || 'http://localhost:3000',
-            GOOGLE_CLIENT_ID: import.meta.env?.VITE_GOOGLE_CLIENT_ID || '',
-            FACEBOOK_CLIENT_ID: import.meta.env?.VITE_FACEBOOK_CLIENT_ID || '',
-            TEST_ADMIN_EMAIL: import.meta.env?.VITE_TEST_ADMIN_EMAIL || '',
-            TEST_ADMIN_PASSWORD: import.meta.env?.VITE_TEST_ADMIN_PASSWORD || '',
-            TEST_USER_EMAIL: import.meta.env?.VITE_TEST_USER_EMAIL || '',
-            TEST_USER_PASSWORD: import.meta.env?.VITE_TEST_USER_PASSWORD || ''
+        // Configuration from environment or window object
+        const CONFIG = {
+            API_BASE: window.ENV_API_BASE || 'https://d1ax5x0o4yxbew.cloudfront.net',
+            GOOGLE_CLIENT_ID: window.ENV_GOOGLE_CLIENT_ID || '215836913374-247t2mtfpmpl9ld0e2tbo8lke1llv4o7.apps.googleusercontent.com',
+            FACEBOOK_CLIENT_ID: window.ENV_FACEBOOK_CLIENT_ID || '1434912034526796',
+            TEST_ADMIN_EMAIL: window.ENV_TEST_ADMIN_EMAIL || 'admin@example.com',
+            TEST_ADMIN_PASSWORD: window.ENV_TEST_ADMIN_PASSWORD || 'admin123'
         };
 
-        // For non-Vite environments (like direct HTML), fallback to hardcoded values for demo
-        if (!ENV.GOOGLE_CLIENT_ID) {
-            ENV.API_BASE = 'https://d1ax5x0o4yxbew.cloudfront.net';
-            ENV.GOOGLE_CLIENT_ID = '215836913374-247t2mtfpmpl9ld0e2tbo8lke1llv4o7.apps.googleusercontent.com';
-            ENV.FACEBOOK_CLIENT_ID = '1434912034526796';
-            ENV.TEST_ADMIN_EMAIL = 'admin@example.com';
-            ENV.TEST_ADMIN_PASSWORD = 'admin123';
-            ENV.TEST_USER_EMAIL = 'user@example.com';
-            ENV.TEST_USER_PASSWORD = 'user123';
-        }
-        
-        // OAuth2 Configuration
-        const OAUTH_CONFIG = {
-            google: {
-                clientId: ENV.GOOGLE_CLIENT_ID,
-                redirectUri: window.location.origin + '/',
-                scope: 'openid email profile',
-                authUrl: 'https://accounts.google.com/o/oauth2/v2/auth'
-            },
-            facebook: {
-                clientId: ENV.FACEBOOK_CLIENT_ID,
-                redirectUri: window.location.origin + '/',
-                scope: 'email',
-                authUrl: 'https://www.facebook.com/v21.0/dialog/oauth'
-            }
-        };
+        console.log('🔧 Configuration Status:', {
+            configFileLoaded: !!window.ENV_API_BASE,
+            apiBase: CONFIG.API_BASE,
+            googleConfigured: !!CONFIG.GOOGLE_CLIENT_ID,
+            facebookConfigured: !!CONFIG.FACEBOOK_CLIENT_ID
+        });
 
         let currentUser = null;
         let currentTokens = null;
+        let isConfigured = false;
 
         // Initialize
         window.addEventListener('load', () => {
-            handleOAuthCallback();
-            checkExistingLogin();
-            setupTestCredentials();
+            checkConfiguration();
+            if (isConfigured) {
+                handleOAuthCallback();
+                checkExistingLogin();
+                setupSocialButtons();
+                setupDevelopmentMode();
+            }
         });
 
-        // Setup test credentials (for development)
-        function setupTestCredentials() {
-            if (ENV.TEST_ADMIN_EMAIL && ENV.TEST_ADMIN_PASSWORD) {
-                document.getElementById('loginEmail').value = ENV.TEST_ADMIN_EMAIL;
-                document.getElementById('loginPassword').value = ENV.TEST_ADMIN_PASSWORD;
-                
-                // Update test account info
-                document.getElementById('testAccountInfo').innerHTML = `
-                    <strong>Test Accounts:</strong><br>
-                    Admin: ${ENV.TEST_ADMIN_EMAIL} / ${ENV.TEST_ADMIN_PASSWORD}<br>
-                    User: ${ENV.TEST_USER_EMAIL} / ${ENV.TEST_USER_PASSWORD}
-                `;
+        function checkConfiguration() {
+            // Check if basic configuration is available
+            if (!CONFIG.API_BASE) {
+                document.getElementById('configStatus').classList.remove('hidden');
+                document.getElementById('loginForms').style.opacity = '0.5';
+                document.getElementById('loginForms').style.pointerEvents = 'none';
+                console.error('❌ Application not configured - missing API_BASE');
+                return false;
             }
 
-            // Log test credentials for developers (only in dev mode)
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                console.log('🔑 Test Credentials Available:');
-                console.log('Admin:', ENV.TEST_ADMIN_EMAIL, '/', ENV.TEST_ADMIN_PASSWORD);
-                console.log('User:', ENV.TEST_USER_EMAIL, '/', ENV.TEST_USER_PASSWORD);
+            isConfigured = true;
+            console.log('✅ Application configured successfully');
+            
+            // Hide config status if it was shown
+            document.getElementById('configStatus').classList.add('hidden');
+            document.getElementById('loginForms').style.opacity = '1';
+            document.getElementById('loginForms').style.pointerEvents = 'auto';
+            
+            return true;
+        }
+
+        function setupSocialButtons() {
+            const socialContainer = document.getElementById('socialButtons');
+            
+            // Google Login Button
+            if (CONFIG.GOOGLE_CLIENT_ID) {
+                const googleButton = document.createElement('button');
+                googleButton.onclick = loginWithGoogle;
+                googleButton.className = 'w-full flex items-center justify-center bg-white border border-gray-300 rounded-lg px-4 py-3 hover:bg-gray-50 transition-colors';
+                googleButton.innerHTML = `
+                    <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
+                    Continue with Google
+                `;
+                socialContainer.appendChild(googleButton);
+            }
+
+            // Facebook Login Button
+            if (CONFIG.FACEBOOK_CLIENT_ID) {
+                const facebookButton = document.createElement('button');
+                facebookButton.onclick = loginWithFacebook;
+                facebookButton.className = 'w-full flex items-center justify-center bg-blue-600 text-white rounded-lg px-4 py-3 hover:bg-blue-700 transition-colors';
+                facebookButton.innerHTML = `
+                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                    Continue with Facebook
+                `;
+                socialContainer.appendChild(facebookButton);
+            }
+
+            // Show message if no social login configured
+            if (!CONFIG.GOOGLE_CLIENT_ID && !CONFIG.FACEBOOK_CLIENT_ID) {
+                socialContainer.innerHTML = '<p class="text-center text-gray-500 text-sm">Social login not configured</p>';
+            }
+        }
+
+        function setupDevelopmentMode() {
+            // Show development info only on localhost
+            const isDev = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname.includes('vercel.app');
+
+            if (isDev && CONFIG.TEST_ADMIN_EMAIL) {
+                document.getElementById('devInfo').classList.remove('hidden');
+                document.getElementById('loginEmail').value = CONFIG.TEST_ADMIN_EMAIL;
+                document.getElementById('loginPassword').value = CONFIG.TEST_ADMIN_PASSWORD;
+                
+                console.log('🔑 Development Mode - Test Credentials:');
+                console.log('Email:', CONFIG.TEST_ADMIN_EMAIL);
+                console.log('Password:', CONFIG.TEST_ADMIN_PASSWORD);
             }
         }
 
@@ -216,8 +242,6 @@
 
             for (let attempt = 1; attempt <= retries; attempt++) {
                 try {
-                    console.log(`Attempt ${attempt}/${retries}: ${defaultOptions.method} ${url}`);
-                    
                     const response = await fetch(url, defaultOptions);
                     
                     if (response.ok) {
@@ -228,14 +252,12 @@
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                 } catch (error) {
-                    console.error(`Fetch attempt ${attempt}/${retries} failed:`, error);
-                    
                     if (attempt === retries) {
                         if (error.message.includes('CORS') || 
                             error.message.includes('NetworkError') ||
                             error.message.includes('Failed to fetch')) {
                             
-                            showStatus('❌ Connection issue. Check if backend is running and accessible.', 'error');
+                            showStatus('❌ Connection issue. Check if backend is running.', 'error');
                             throw new Error('CORS or network error');
                         }
                         throw error;
@@ -246,7 +268,6 @@
             }
         }
 
-        // Handle OAuth callback when user returns from provider
         function handleOAuthCallback() {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
@@ -259,7 +280,6 @@
             }
         }
 
-        // Check for existing login
         function checkExistingLogin() {
             const token = localStorage.getItem('accessToken');
             const user = localStorage.getItem('user');
@@ -271,9 +291,13 @@
             }
         }
 
-        // Manual Login
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            if (!isConfigured) {
+                showStatus('❌ Application not configured', 'error');
+                return;
+            }
 
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
@@ -281,7 +305,7 @@
             try {
                 showStatus('Logging in...', 'info');
                 
-                const response = await corsResistantFetch(`${ENV.API_BASE}/api/v1/auth/login`, {
+                const response = await corsResistantFetch(`${CONFIG.API_BASE}/api/v1/auth/login`, {
                     method: 'POST',
                     body: JSON.stringify({ email, password })
                 });
@@ -307,60 +331,61 @@
             }
         });
 
-        // Social Login Functions
         function loginWithGoogle() {
-            if (!OAUTH_CONFIG.google.clientId) {
+            if (!CONFIG.GOOGLE_CLIENT_ID) {
                 showStatus('Google OAuth not configured', 'error');
                 return;
             }
 
             const state = `google_${generateRandomString()}`;
             const params = new URLSearchParams({
-                client_id: OAUTH_CONFIG.google.clientId,
-                redirect_uri: OAUTH_CONFIG.google.redirectUri,
-                scope: OAUTH_CONFIG.google.scope,
+                client_id: CONFIG.GOOGLE_CLIENT_ID,
+                redirect_uri: window.location.origin + '/',
+                scope: 'openid email profile',
                 response_type: 'code',
                 state: state,
                 access_type: 'offline',
                 prompt: 'consent'
             });
 
-            const authUrl = `${OAUTH_CONFIG.google.authUrl}?${params.toString()}`;
+            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
             showStatus('Redirecting to Google...', 'info');
             window.location.href = authUrl;
         }
 
         function loginWithFacebook() {
-            if (!OAUTH_CONFIG.facebook.clientId) {
+            if (!CONFIG.FACEBOOK_CLIENT_ID) {
                 showStatus('Facebook OAuth not configured', 'error');
                 return;
             }
 
             const state = `facebook_${generateRandomString()}`;
             const params = new URLSearchParams({
-                client_id: OAUTH_CONFIG.facebook.clientId,
-                redirect_uri: OAUTH_CONFIG.facebook.redirectUri,
-                scope: OAUTH_CONFIG.facebook.scope,
+                client_id: CONFIG.FACEBOOK_CLIENT_ID,
+                redirect_uri: window.location.origin + '/',
+                scope: 'email',
                 response_type: 'code',
                 state: state
             });
 
-            const authUrl = `${OAUTH_CONFIG.facebook.authUrl}?${params.toString()}`;
+            const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`;
             showStatus('Redirecting to Facebook...', 'info');
             window.location.href = authUrl;
         }
 
-        // Exchange authorization code for tokens
         async function exchangeCodeForTokens(provider, code) {
             try {
                 showStatus(`Exchanging ${provider} authorization code...`, 'info');
 
-                const response = await corsResistantFetch(`${ENV.API_BASE}/api/v1/auth/social/exchange`, {
+                const redirectUri = provider === 'google' ? window.location.origin + '/' : 
+                                  provider === 'facebook' ? window.location.origin + '/' : '';
+
+                const response = await corsResistantFetch(`${CONFIG.API_BASE}/api/v1/auth/social/exchange`, {
                     method: 'POST',
                     body: JSON.stringify({
                         provider: provider,
                         code: code,
-                        redirectUri: OAUTH_CONFIG[provider].redirectUri
+                        redirectUri: redirectUri
                     })
                 });
 
@@ -378,8 +403,6 @@
                     showStatus(`✅ ${provider} login successful!${newUserText}`, 'success');
 
                     updateUserDisplay();
-
-                    // Clean up URL
                     window.history.replaceState({}, document.title, window.location.pathname);
                 } else {
                     showStatus(`❌ ${provider} login failed: ${data.message || 'Authentication failed'}`, 'error');
@@ -390,13 +413,12 @@
             }
         }
 
-        // Logout
         async function logout() {
             const refreshToken = localStorage.getItem('refreshToken');
 
             if (refreshToken) {
                 try {
-                    await corsResistantFetch(`${ENV.API_BASE}/api/v1/auth/logout`, {
+                    await corsResistantFetch(`${CONFIG.API_BASE}/api/v1/auth/logout`, {
                         method: 'POST',
                         body: JSON.stringify({ refreshToken: refreshToken })
                     });
@@ -419,7 +441,6 @@
             showStatus('👋 Logged out successfully', 'success');
         }
 
-        // Navigate to dashboard
         function goToDashboard() {
             showStatus('Redirecting to dashboard...', 'info');
             setTimeout(() => {
@@ -427,7 +448,6 @@
             }, 500);
         }
 
-        // UI Helper Functions
         function showStatus(message, type = 'info') {
             const container = document.getElementById('statusContainer');
             const messageEl = document.getElementById('statusMessage');
@@ -470,7 +490,7 @@
             `;
 
             document.getElementById('userCard').classList.remove('hidden');
-            document.getElementById('loginForms').classList.remove('hidden');
+            document.getElementById('loginForms').classList.add('hidden');
 
             document.getElementById('navUserEmail').textContent = currentUser.email;
             document.getElementById('navUser').classList.remove('hidden');
