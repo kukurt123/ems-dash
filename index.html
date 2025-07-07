@@ -42,7 +42,7 @@
     <div class="max-w-md mx-auto pt-20">
         <div class="bg-white rounded-lg shadow-lg p-8">
             <h1 class="text-2xl font-bold text-center mb-8">Welcome Back</h1>
-            <p class="text-xs text-gray-500 text-center mb-8">v1.0.1</p>
+            <p class="text-xs text-gray-500 text-center mb-8">v1.0.2</p>
             <!-- Status Messages -->
             <div id="statusContainer" class="mb-6 hidden">
                 <div id="statusMessage" class="p-4 rounded-lg border fade-in">
@@ -288,8 +288,9 @@
 
         // Social Login Functions
         function loginWithGoogle() {
-            if (!OAUTH_CONFIG.google.clientId || OAUTH_CONFIG.google.clientId === '215836913374-247t2mtfpmpl9ld0e2tbo8lke1lv4o7.apps.googleusercontent.com') {
-                showStatus('Google OAuth not configured. Please add your Google Client ID.', 'error');
+            if (!OAUTH_CONFIG.google.clientId || OAUTH_CONFIG.google.clientId === '215836913374-247t2mtfpmpl9ld0e2tbo8lke1lv4o7.apps.googleusercontent.com ') {
+                // showStatus('Google OAuth not configured. Please add your Google Client ID. ${OAUTH_CONFIG.google.clientId }, 'error');
+                showStatus(`Google OAuth not configured. Please add your Google Client ID. ${OAUTH_CONFIG.google.clientId}`, 'error');
                 return;
             }
 
